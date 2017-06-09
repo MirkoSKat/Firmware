@@ -280,7 +280,7 @@ Sensors::Sensors(bool hil_enabled) :
 	initialize_parameter_handles(_parameter_handles);
 
 	_airspeed_validator.set_timeout(300000);
-	_airspeed_validator.set_equal_value_threshold(100);
+	_airspeed_validator.set_equal_value_threshold(200);
 }
 
 Sensors::~Sensors()

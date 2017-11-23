@@ -79,6 +79,9 @@
 #include <uORB/topics/control_state.h>
 #include <uORB/topics/collision_report.h>
 
+#include <uORB/topics/ext_vehicles_attitude.h>
+#include <uORB/topics/ext_rssi_status.h>
+
 
 #include "mavlink_mission.h"
 #include "mavlink_parameters.h"
@@ -151,6 +154,8 @@ private:
 	void handle_message_serial_control(mavlink_message_t *msg);
 	void handle_message_logging_ack(mavlink_message_t *msg);
 	void handle_message_play_tune(mavlink_message_t *msg);
+    void handle_message_attitude(mavlink_message_t *msg);
+    void handle_message_rssi_status(mavlink_message_t *msg);
 
 	void *receive_thread(void *arg);
 
@@ -201,6 +206,8 @@ private:
 	struct vehicle_local_position_s _hil_local_pos;
 	struct vehicle_land_detected_s _hil_land_detector;
 	struct vehicle_control_mode_s _control_mode;
+    orb_advert_t _ext_vehicles_attitude;    /*--- MirkoSKat ---*/
+    orb_advert_t _ext_rssi_status;          /*--- MirkoSKat ---*/
 	orb_advert_t _global_pos_pub;
 	orb_advert_t _local_pos_pub;
 	orb_advert_t _attitude_pub;

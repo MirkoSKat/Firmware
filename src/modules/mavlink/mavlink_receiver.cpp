@@ -171,10 +171,17 @@ MavlinkReceiver::handle_message(mavlink_message_t *msg)
 		if (_mavlink->get_mode() == Mavlink::MAVLINK_MODE_CONFIG) {
 			_mavlink->set_config_link_on(true);
 		}
-	}
+    }
+
+    /*--- MirkoSKat ---*/
+    /* For catching RSSI stats ---*/
+    if(msg->sysid == 51){
+        handle_message_rssi_status(msg);
+    }
+    /*---------------*/
 
 	switch (msg->msgid) {
-	case MAVLINK_MSG_ID_COMMAND_LONG:
+    case MAVLINK_MSG_ID_COMMAND_LONG:
 		if (_mavlink->accepting_commands()) {
 			handle_message_command_long(msg);
 		}
@@ -301,6 +308,10 @@ MavlinkReceiver::handle_message(mavlink_message_t *msg)
 	case MAVLINK_MSG_ID_PLAY_TUNE:
 		handle_message_play_tune(msg);
 		break;
+
+    case MAVLINK_MSG_ID_ATTITUDE:
+        handle_message_attitude(msg);   /*--- MirkoSKat ---*/
+        break;
 
 	default:
 		break;
@@ -2115,6 +2126,68 @@ void MavlinkReceiver::handle_message_gps_rtcm_data(mavlink_message_t *msg)
 
 }
 
+/*--- MirkoSKat ---*/
+void
+MavlinkReceiver::handle_message_attitude(mavlink_message_t *msg){
+    mavlink_attitude_t mav_att;
+    mavlink_msg_attitude_decode(msg,&mav_att);
+
+    struct ext_vehicles_attitude_s uorb_att;
+    memset(&uorb_att,0,sizeof(uorb_att));
+
+
+    uorb_att.timestamp = hrt_absolute_time();
+    uorb_att.sys_id = msg->sysid;
+    uorb_att.roll = mav_att.roll;
+    uorb_att.pitch = mav_att.pitch;
+    uorb_att.yaw = mav_att.yaw;
+    uorb_att.rollspeed = mav_att.rollspeed;
+    uorb_att.pitchspeed = mav_att.pitchspeed;
+
+    if(_ext_vehicles_attitude == nullptr){
+        _ext_vehicles_attitude = orb_advertise(ORB_ID(ext_vehicles_attitude), &uorb_att);
+    }
+    else{
+        orb_publish(ORB_ID(ext_vehicles_attitude),_ext_vehicles_attitude, &uorb_att);
+    }
+
+    /*--- Log direct to SD
+    FILE *fd;
+    fd  = fopen("/fs/microsd/mavlink_attitude_log.txt","a");
+    if(fd != NULL){
+        mavlink_attitude_t att;
+        mavlink_msg_attitude_decode(msg, &att);
+        fprintf(fd,"sys_id: %i\troll: %8.4f\tpitch: %8.4f\tyaw: %8.4f\n",msg->sysid, (double)att.roll, (double)att.pitch, (double)att.yaw);
+    }
+    fclose(fd);
+    ---*/
+}
+
+void
+MavlinkReceiver::handle_message_rssi_status(mavlink_message_t*msg){
+    mavlink_radio_status_t mav_rssi;
+    mavlink_msg_radio_status_decode(msg, &mav_rssi);
+
+    struct ext_rssi_status_s uorb_rssi;
+
+    uorb_rssi.timestamp = hrt_absolute_time();
+    uorb_rssi.radio_id = msg->compid;
+    uorb_rssi.rxerrors = mav_rssi.rxerrors;
+    uorb_rssi.fixed = mav_rssi.fixed;
+    uorb_rssi.rssi = mav_rssi.rssi;
+    uorb_rssi.remrssi = mav_rssi.remrssi;
+    uorb_rssi.txbuf = mav_rssi.txbuf;
+    uorb_rssi.noise = mav_rssi.noise;
+    uorb_rssi.remnoise = mav_rssi.remnoise;
+
+    if(_ext_rssi_status == nullptr){
+        _ext_rssi_status = orb_advertise(ORB_ID(ext_rssi_status), &uorb_rssi);
+    }
+    else{
+        orb_publish(ORB_ID(ext_rssi_status),_ext_rssi_status, &uorb_rssi);
+    }
+}
+
 void
 MavlinkReceiver::handle_message_hil_state_quaternion(mavlink_message_t *msg)
 {
@@ -2445,16 +2518,16 @@ MavlinkReceiver::receive_thread(void *arg)
 #endif
 			// only start accepting messages once we're sure who we talk to
 
-			if (_mavlink->get_client_source_initialized()) {
+            if (_mavlink->get_client_source_initialized()) {
 				/* if read failed, this loop won't execute */
 				for (ssize_t i = 0; i < nread; i++) {
-					if (mavlink_parse_char(_mavlink->get_channel(), buf[i], &msg, &_status)) {
+                    if (mavlink_parse_char(_mavlink->get_channel(), buf[i], &msg, &_status)) {
 
 						/* check if we received version 2 and request a switch. */
 						if (!(_mavlink->get_status()->flags & MAVLINK_STATUS_FLAG_IN_MAVLINK1)) {
 							/* this will only switch to proto version 2 if allowed in settings */
 							_mavlink->set_proto_version(2);
-						}
+                        }
 
 						/* handle generic messages and commands */
 						handle_message(&msg);
@@ -2474,7 +2547,7 @@ MavlinkReceiver::receive_thread(void *arg)
 						/* handle packet with parent object */
 						_mavlink->handle_message(&msg);
 					}
-				}
+                }
 
 				/* count received bytes (nread will be -1 on read error) */
 				if (nread > 0) {

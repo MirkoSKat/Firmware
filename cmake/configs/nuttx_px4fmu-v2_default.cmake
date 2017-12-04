@@ -195,6 +195,7 @@ set(config_module_list
 	# Self written apps
 	#
 	modules/ext_vehicles_app
+    modules/ext_rssi_app
 )
 
 set(config_extra_builtin_cmds

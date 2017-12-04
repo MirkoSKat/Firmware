@@ -176,7 +176,9 @@ MavlinkReceiver::handle_message(mavlink_message_t *msg)
     /*--- MirkoSKat ---*/
     /* For catching RSSI stats ---*/
     if(msg->sysid == 51){
+        PX4_INFO("\nCalled RSSI\n");
         handle_message_rssi_status(msg);
+
     }
     /*---------------*/
 

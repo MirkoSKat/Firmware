@@ -169,6 +169,12 @@ set(config_module_list
 	# Hardware test
 	#examples/hwtest
 
+        #
+        # Self written apps
+        #
+        modules/ext_vehicles_app
+        modules/ext_rssi_app
+
 	# EKF
 	examples/ekf_att_pos_estimator
 )

@@ -175,15 +175,15 @@ MavlinkReceiver::handle_message(mavlink_message_t *msg)
 
     /*--- MirkoSKat ---*/
     /* For catching RSSI stats ---*/
-//    FILE *sd;
-//    sd = fopen("/fs/microsd/MAVLink.csv","a");
-//    fprintf(sd,"MAVLink1:;%i;%i;%i\n", msg->sysid,msg->compid,msg->msgid);
-//    fclose(sd);
+    FILE *sd;
+    sd = fopen("/fs/microsd/MAVLink.csv","a");
+    fprintf(sd,"MAVLink1:;%i;%i;%i\n", msg->sysid,msg->compid,msg->msgid);
+    fclose(sd);
 
     if(msg->sysid == 51){
-//        sd = fopen("/fs/microsd/MAVLink.csv","a");
-//        fprintf(sd,"MAVLink2:;%i;%i;%i\n", msg->sysid,msg->compid,msg->msgid);
-//        fclose(sd);
+        sd = fopen("/fs/microsd/MAVLink.csv","a");
+        fprintf(sd,"MAVLink2:;%i;%i;%i\n", msg->sysid,msg->compid,msg->msgid);
+        fclose(sd);
         handle_message_rssi_status(msg);
 
     }
@@ -2174,11 +2174,15 @@ MavlinkReceiver::handle_message_attitude(mavlink_message_t *msg){
 
 void
 MavlinkReceiver::handle_message_rssi_status(mavlink_message_t*msg){
+    //MAVLink Frame
     mavlink_radio_status_t mav_rssi;
     mavlink_msg_radio_status_decode(msg, &mav_rssi);
 
+    // uORB
     struct ext_rssi_status_s uorb_rssi;
+    memset(&uorb_rssi,0,sizeof(uorb_rssi));
 
+    // Data from MAVLink to uORB
     uorb_rssi.timestamp = hrt_absolute_time();
     uorb_rssi.radio_id = msg->compid;
     uorb_rssi.rxerrors = mav_rssi.rxerrors;
@@ -2189,22 +2193,31 @@ MavlinkReceiver::handle_message_rssi_status(mavlink_message_t*msg){
     uorb_rssi.noise = mav_rssi.noise;
     uorb_rssi.remnoise = mav_rssi.remnoise;
 
-
+    // Print debug status (Delete in Future)
     FILE *sd;
     sd = fopen("/fs/microsd/MAVLink.csv","a");
     fprintf(sd,"MAVLink3:;%i;%i;%i\n", msg->sysid,msg->compid,msg->msgid);
-    fclose(sd);
 
-    sd = fopen("/fs/microsd/rssi.csv","a");
-    fprintf(sd,"%i;%i;%i;%i;%i;%i;%i;%i;%i; \n", (int)uorb_rssi.timestamp, (int)uorb_rssi.radio_id, (int)uorb_rssi.rxerrors, (int)uorb_rssi.fixed, (int)uorb_rssi.rssi, (int)uorb_rssi.remrssi, (int)uorb_rssi.txbuf, (int)uorb_rssi.noise, (int)uorb_rssi.remnoise);
-    fclose(sd);
+    FILE *sdRssi;
+    sdRssi = fopen("/fs/microsd/rssi.csv","a");
+    fprintf(sdRssi,"%i;%i;%i;%i;%i;%i;%i;%i;%i; \n", (int)uorb_rssi.timestamp, (int)uorb_rssi.radio_id, (int)uorb_rssi.rxerrors, (int)uorb_rssi.fixed, (int)uorb_rssi.rssi, (int)uorb_rssi.remrssi, (int)uorb_rssi.txbuf, (int)uorb_rssi.noise, (int)uorb_rssi.remnoise);
+    fclose(sdRssi);
 
+    // If not allready advertised, do it, else publish
     if(_ext_rssi_status == nullptr){
+        fprintf(sd,"MAVLink4:\n");
         _ext_rssi_status = orb_advertise(ORB_ID(ext_rssi_status), &uorb_rssi);
+
+        fprintf(sd,"MAVLink5:\n");
+        fclose(sd);
     }
     else{
+        fprintf(sd,"MAVLink6:\n");
         orb_publish(ORB_ID(ext_rssi_status),_ext_rssi_status, &uorb_rssi);
+
+        fprintf(sd,"MAVLink7:\n");
     }
+    fclose(sd);
 }
 
 void

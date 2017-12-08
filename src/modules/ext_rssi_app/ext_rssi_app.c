@@ -103,7 +103,7 @@ int ext_rssi_app_main(int argc, char *argv[])
 
     if (!strcmp(argv[1], "start")) {
         FILE *sd;
-        sd = fopen("/fs/microsd/RSSI.csv","a");
+        sd = fopen("/fs/microsd/daem.csv","a");
         fprintf(sd,"Start\n");
         fclose(sd);
 
@@ -125,7 +125,7 @@ int ext_rssi_app_main(int argc, char *argv[])
 
     if (!strcmp(argv[1], "stop")) {
         FILE *sd;
-        sd = fopen("/fs/microsd/RSSI.csv","a");
+        sd = fopen("/fs/microsd/daem.csv","a");
         fprintf(sd,"Stop\n");
         fclose(sd);
 
@@ -169,7 +169,7 @@ int ext_rssi_thread_main(int argc, char *argv[])
         }
         else if((poll_ret > 0)&&(fds[0].revents & POLLIN)){
             FILE *sd;
-            sd = fopen("/fs/microsd/RSSI.csv","a");
+            sd = fopen("/fs/microsd/daem.csv","a");
             if(sd == NULL){
                 PX4_INFO("ERROR opening file on sd card");
                 thread_should_exit = true;

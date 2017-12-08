@@ -175,8 +175,15 @@ MavlinkReceiver::handle_message(mavlink_message_t *msg)
 
     /*--- MirkoSKat ---*/
     /* For catching RSSI stats ---*/
+//    FILE *sd;
+//    sd = fopen("/fs/microsd/MAVLink.csv","a");
+//    fprintf(sd,"MAVLink1:;%i;%i;%i\n", msg->sysid,msg->compid,msg->msgid);
+//    fclose(sd);
+
     if(msg->sysid == 51){
-        PX4_INFO("\nCalled RSSI\n");
+//        sd = fopen("/fs/microsd/MAVLink.csv","a");
+//        fprintf(sd,"MAVLink2:;%i;%i;%i\n", msg->sysid,msg->compid,msg->msgid);
+//        fclose(sd);
         handle_message_rssi_status(msg);
 
     }
@@ -2181,6 +2188,16 @@ MavlinkReceiver::handle_message_rssi_status(mavlink_message_t*msg){
     uorb_rssi.txbuf = mav_rssi.txbuf;
     uorb_rssi.noise = mav_rssi.noise;
     uorb_rssi.remnoise = mav_rssi.remnoise;
+
+
+    FILE *sd;
+    sd = fopen("/fs/microsd/MAVLink.csv","a");
+    fprintf(sd,"MAVLink3:;%i;%i;%i\n", msg->sysid,msg->compid,msg->msgid);
+    fclose(sd);
+
+    sd = fopen("/fs/microsd/rssi.csv","a");
+    fprintf(sd,"%i;%i;%i;%i;%i;%i;%i;%i;%i; \n", (int)uorb_rssi.timestamp, (int)uorb_rssi.radio_id, (int)uorb_rssi.rxerrors, (int)uorb_rssi.fixed, (int)uorb_rssi.rssi, (int)uorb_rssi.remrssi, (int)uorb_rssi.txbuf, (int)uorb_rssi.noise, (int)uorb_rssi.remnoise);
+    fclose(sd);
 
     if(_ext_rssi_status == nullptr){
         _ext_rssi_status = orb_advertise(ORB_ID(ext_rssi_status), &uorb_rssi);

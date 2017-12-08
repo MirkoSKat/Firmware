@@ -95,12 +95,6 @@ usage(const char *reason)
  */
 int ext_rssi_app_main(int argc, char *argv[])
 {
-    // Test
-    FILE *sd;
-    sd = fopen("/fs/microsd/MAVLink_log_rssi_test.txt","a");
-    fprintf(sd,"TEST\n");
-    fclose(sd);
-    // Test end
 
     if (argc < 2) {
         usage("missing command");
@@ -108,15 +102,19 @@ int ext_rssi_app_main(int argc, char *argv[])
     }
 
     if (!strcmp(argv[1], "start")) {
+        FILE *sd;
+        sd = fopen("/fs/microsd/RSSI.csv","a");
+        fprintf(sd,"Start\n");
+        fclose(sd);
 
-    if (thread_running) {
-        PX4_INFO("App already running\n");
-        /* this is not an error */
-        return 0;
-    }
+        if (thread_running) {
+            PX4_INFO("App already running\n");
+            /* this is not an error */
+            return 0;
+        }
 
-    thread_should_exit = false;
-    daemon_task = px4_task_spawn_cmd("daemon",
+        thread_should_exit = false;
+        daemon_task = px4_task_spawn_cmd("daemon",
                             SCHED_DEFAULT,
                             SCHED_PRIORITY_DEFAULT,
                             2000,
@@ -126,6 +124,11 @@ int ext_rssi_app_main(int argc, char *argv[])
     }
 
     if (!strcmp(argv[1], "stop")) {
+        FILE *sd;
+        sd = fopen("/fs/microsd/RSSI.csv","a");
+        fprintf(sd,"Stop\n");
+        fclose(sd);
+
         thread_should_exit = true;
         return 0;
     }
@@ -166,7 +169,7 @@ int ext_rssi_thread_main(int argc, char *argv[])
         }
         else if((poll_ret > 0)&&(fds[0].revents & POLLIN)){
             FILE *sd;
-            sd = fopen("/fs/microsd/MAVLink_log_rssi.txt","a");
+            sd = fopen("/fs/microsd/RSSI.csv","a");
             if(sd == NULL){
                 PX4_INFO("ERROR opening file on sd card");
                 thread_should_exit = true;
@@ -175,7 +178,7 @@ int ext_rssi_thread_main(int argc, char *argv[])
                 PX4_INFO("Save data");
                 struct ext_rssi_status_s raw;
                 orb_copy(ORB_ID(ext_rssi_status), ext_rssi_status_fd, &raw);
-                fprintf(sd,"%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t\n", (int)raw.timestamp, (int)raw.radio_id, (int)raw.rxerrors, (int)raw.fixed, (int)raw.rssi, (int)raw.remrssi, (int)raw.txbuf, (int)raw.noise, (int)raw.remnoise);
+                fprintf(sd,"%i;%i;%i;%i;%i;%i;%i;%i;%i; \n", (int)raw.timestamp, (int)raw.radio_id, (int)raw.rxerrors, (int)raw.fixed, (int)raw.rssi, (int)raw.remrssi, (int)raw.txbuf, (int)raw.noise, (int)raw.remnoise);
                 fclose(sd);
             }
         }

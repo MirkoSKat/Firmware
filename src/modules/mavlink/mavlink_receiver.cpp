@@ -175,15 +175,15 @@ MavlinkReceiver::handle_message(mavlink_message_t *msg)
 
     /*--- MirkoSKat ---*/
     /* For catching RSSI stats ---*/
-    FILE *sd;
-    sd = fopen("/fs/microsd/MAVLink.csv","a");
-    fprintf(sd,"MAVLink1:;%i;%i;%i\n", msg->sysid,msg->compid,msg->msgid);
-    fclose(sd);
+//    FILE *sd;
+//    sd = fopen("/fs/microsd/MAVLink.csv","a");
+//    fprintf(sd,"MAVLink1:;%i;%i;%i\n", msg->sysid,msg->compid,msg->msgid);
+//    fclose(sd);
 
     if(msg->sysid == 51){
-        sd = fopen("/fs/microsd/MAVLink.csv","a");
-        fprintf(sd,"MAVLink2:;%i;%i;%i\n", msg->sysid,msg->compid,msg->msgid);
-        fclose(sd);
+//        sd = fopen("/fs/microsd/MAVLink.csv","a");
+//        fprintf(sd,"MAVLink2:;%i;%i;%i\n", msg->sysid,msg->compid,msg->msgid);
+//        fclose(sd);
         handle_message_rssi_status(msg);
 
     }
@@ -2194,9 +2194,9 @@ MavlinkReceiver::handle_message_rssi_status(mavlink_message_t*msg){
     uorb_rssi.remnoise = mav_rssi.remnoise;
 
     // Print debug status (Delete in Future)
-    FILE *sd;
-    sd = fopen("/fs/microsd/MAVLink.csv","a");
-    fprintf(sd,"MAVLink3:;%i;%i;%i\n", msg->sysid,msg->compid,msg->msgid);
+//    FILE *sd;
+//    sd = fopen("/fs/microsd/MAVLink.csv","a");
+//    fprintf(sd,"MAVLink3:;%i;%i;%i\n", msg->sysid,msg->compid,msg->msgid);
 
     FILE *sdRssi;
     sdRssi = fopen("/fs/microsd/rssi.csv","a");
@@ -2205,19 +2205,19 @@ MavlinkReceiver::handle_message_rssi_status(mavlink_message_t*msg){
 
     // If not allready advertised, do it, else publish
     if(_ext_rssi_status == nullptr){
-        fprintf(sd,"MAVLink4:\n");
+//        fprintf(sd,"MAVLink4:\n");
         _ext_rssi_status = orb_advertise(ORB_ID(ext_rssi_status), &uorb_rssi);
 
-        fprintf(sd,"MAVLink5:\n");
-        fclose(sd);
+//        fprintf(sd,"MAVLink5:\n");
+//        fclose(sd);
     }
     else{
-        fprintf(sd,"MAVLink6:\n");
+//        fprintf(sd,"MAVLink6:\n");
         orb_publish(ORB_ID(ext_rssi_status),_ext_rssi_status, &uorb_rssi);
 
-        fprintf(sd,"MAVLink7:\n");
+//        fprintf(sd,"MAVLink7:\n");
     }
-    fclose(sd);
+//    fclose(sd);
 }
 
 void
